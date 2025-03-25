@@ -1,0 +1,25 @@
+parameters:
+  cache.dir: '%env(CACHE_DIR)%'
+  cache.default_ttl: 432000
+  leetis.api.url: 'https://mlb.leetis.com/batting-data/'
+
+services:
+  _defaults:
+    public: true
+
+  cache:
+    class: Kodus\Cache\FileCache
+    arguments: ['%cache.dir%', '%cache.default_ttl%']
+
+  leetis.api.client:
+    class: GuzzleHttp\Client
+    arguments:
+      - { base_uri: '%leetis.api.url%' }
+
+  machup_comparison.event_data_provider:
+    class: DanielCHood\BaseballMatchupComparison\DataProvider\LeetisApiEvent
+    arguments: ['@leetis.api.client']
+
+  machup_comparison.event_repository:
+    class: DanielCHood\BaseballMatchupComparison\Repository\Event
+    arguments: ['@machup_comparison.event_data_provider']

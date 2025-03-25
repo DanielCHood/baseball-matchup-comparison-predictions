@@ -1,0 +1,36 @@
+{
+    "name": "danielchood/baseball-matchup-comparison-predictions",
+    "type": "library",
+    "require": {
+        "symfony/dependency-injection": "^7.2",
+        "kodus/file-cache": "^2.1",
+        "symfony/config": "^7.2",
+        "symfony/yaml": "^7.2",
+        "symfony/dotenv": "^7.2",
+        "danielchood/baseball-matchup-comparison": "^0.0.1@alpha"
+    },
+    "autoload": {
+        "psr-4": {
+            "DanielCHood\\BaseballMatchupComparisonPredictions\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Daniel Hood",
+            "email": "mrdhood@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "github",
+            "url": "git@github.com:DanielCHood/baseball-matchup-comparison.git"
+        }
+    ],
+    "extra": {
+        "runtime": {
+            "use_putenv": true
+        }
+    }
+}
