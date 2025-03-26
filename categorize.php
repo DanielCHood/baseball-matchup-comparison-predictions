@@ -3,6 +3,7 @@
 require_once('vendor/autoload.php');
 
 use DanielCHood\BaseballMatchupComparisonPredictions\Container;
+use Illuminate\Support\Arr;
 use Kodus\Cache\FileCache;
 
 const CACHE_BACKDATE_PREDICTION_COLLECTION = 'backdate.prediction-collection';
@@ -14,15 +15,21 @@ $cache = $container->get("cache");
 
 $predictionCollection = $cache->get(CACHE_BACKDATE_PREDICTION_COLLECTION, []);
 
-$grouping = ['favorite', 'battingAverage'];
+$grouping = ['label', 'favorite'];
 
 $results = [];
 
 $predictionCollection = array_filter($predictionCollection, function ($row) {
-    return ($row['label'] === 'HomeRunStartingPitcher' && $row['battingAverage'] >= 0.200 && (
-        ((floor($row['hitScore'])) > 1 && round($row['hrScore'] * 10) >= (floor($row['hitScore'])))
-        || (floor($row['hitScore'])) >= 4)
-    );
+    return in_array($row['label'], [
+        'underdog;hrScore>0.15;pitchesSeen>400;pitchesThrown>400;velocityScore>2;hrPercentage>1.5;battingAverage>0.2',
+        'favorite;Experimental'
+    ]);
+});
+
+$predictionCollection = Arr::map($predictionCollection, fn ($array) => Arr::dot($array));
+$predictionCollection = Arr::map($predictionCollection, function ($array) {
+    $array['battingAverage_hitScore_difference'] = $array['hitScore'] - ($array['battingAverage'] * 10);
+    return $array;
 });
 
 usort($predictionCollection, function($a, $b) use ($grouping) {
@@ -33,12 +40,34 @@ usort($predictionCollection, function($a, $b) use ($grouping) {
     return $a[$grouping[0]] <=> $b[$grouping[0]];
 });
 
+$predictionCollection = array_filter($predictionCollection, function ($row) {
+    if ($row['label'] !== 'favorite;Experimental') {
+        return true;
+    }
+
+    return $row['batterHrPercent'] > 1.800 && $row['pitcherHrPercent'] > 1.100
+        && abs($row['hitScore'] - ($row['battingAverage'] * 10)) > 1
+        && (
+            $row['hrScore'] > 0.0
+            && $row['batterPitchCount'] > 400
+            && $row['pitcherPitchCount'] > 400
+            && $row['ml'] > 110
+        );
+});
+
 foreach ($predictionCollection as $prediction) {
     $label = '';
+
     foreach ($grouping as $group) {
-        if (in_array($group, ['battingAverage', 'hrScore'])) {
+        if (in_array($group, ['battingAverage', 'hrScore', 'batterHrPercent', 'pitcherHrPercent'])) {
             $prediction[$group] = floor($prediction[$group] * 10);
-        } else if (in_array($group, ['hitScore'])) {
+        } else if (in_array($group, ['hitScore', 'velocity', 'batterHrPercent', 'pitcherHrPercent'])) {
+            $prediction[$group] = floor($prediction[$group]);
+        } else if (in_array($group, ['batterPitchCount', 'pitcherPitchCount'])) {
+            $prediction[$group] = floor($prediction[$group] / 100);
+        } else if (in_array($group, ['ml'])) {
+            $prediction[$group] = floor($prediction[$group] / 10);
+        } elseif (in_array($group, ['battingAverage_hitScore_difference'])) {
             $prediction[$group] = floor($prediction[$group]);
         }
 

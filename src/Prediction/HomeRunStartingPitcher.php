@@ -29,7 +29,9 @@ class HomeRunStartingPitcher implements PredictionInterface {
             'batterHrPercent' => $this->getBatterHomeRunPercentage(),
             'pitcherHrPercent' => $this->getPitcherHomeRunPercentage(),
             'battingAverage' => $this->getBattingAverage(),
-            'won' => $this->win()
+            'won' => $this->win(),
+            'pitcher' => $this->matchup->getPitcherStats()->toArray()['athlete'],
+            'batter' => $this->matchup->getBatterStats()->toArray()['athlete'],
         ];
     }
 
