@@ -1,13 +1,17 @@
+imports:
+  - criteria.yml
+  - results.yml
+
 parameters:
   cache.dir: '%env(CACHE_DIR)%'
   cache.default_ttl: 432000
   leetis.api.url: 'https://mlb.leetis.com/batting-data/'
+  predictors:
+    - '@predictors.one'
 
 services:
-  _defaults:
-    public: true
-
   cache:
+    public: true
     class: Kodus\Cache\FileCache
     arguments: ['%cache.dir%', '%cache.default_ttl%']
 
@@ -21,5 +25,37 @@ services:
     arguments: ['@leetis.api.client']
 
   machup_comparison.event_repository:
+    public: true
     class: DanielCHood\BaseballMatchupComparison\Repository\Event
     arguments: ['@machup_comparison.event_data_provider']
+
+  predictors.one:
+    public: true
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionFactory
+    arguments:
+      $name: 'underdog;hrScore>0.15;pitchesSeen>400;pitchesThrown>400;velocityScore>2;hrPercentage>1.5;battingAverage>0.2'
+      $criteria:
+        - '@predictor_criteria.minimums.hrScore_over_15'
+        - '@predictor_criteria.minimums.batterPitchCount_over_400'
+        - '@predictor_criteria.minimums.pitcherPitchCount_over_400'
+        - '@predictor_criteria.minimums.hitScore_over_0'
+        - '@predictor_criteria.minimums.velocityScore_over_2'
+        - '@predictor_criteria.minimums.batterHomeRunPercentage_over_oneFive'
+        - '@predictor_criteria.minimums.batterBattingAverage_over_2thousand'
+        - '@predictor_criteria.maximums.batterMoneyLine_under_100'
+      $win: '@predictor_result.home_run_against_starter'
+  predictors.two:
+    public: true
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionFactory
+    arguments:
+      $name: 'favorite;ml>110;pitchesSeen>400;pitchesThrown>400;velocity>0;hrPercentage>1.8;pitcherHrPercentage>1.1;hitScore>0'
+      $criteria:
+          - '@predictor_criteria.minimums.hrScore_over_15'
+          - '@predictor_criteria.minimums.batterPitchCount_over_400'
+          - '@predictor_criteria.minimums.pitcherPitchCount_over_400'
+          - '@predictor_criteria.minimums.hitScore_over_0'
+          - '@predictor_criteria.minimums.velocityScore_over_2'
+          - '@predictor_criteria.minimums.batterHomeRunPercentage_over_oneFive'
+          - '@predictor_criteria.minimums.batterBattingAverage_over_2thousand'
+          - '@predictor_criteria.maximums.batterMoneyLine_under_100'
+      $win: '@predictor_result.home_run_against_starter'

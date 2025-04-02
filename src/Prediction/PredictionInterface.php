@@ -3,14 +3,15 @@
 namespace DanielCHood\BaseballMatchupComparisonPredictions\Prediction;
 
 use Closure;
-use DanielCHood\BaseballMatchupComparison\Matchup;
+use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
+use DanielCHood\BaseballMatchupComparisonPredictions\Result\ResultInterface;
 
 interface PredictionInterface {
     public function __construct(
         string $name,
-        Matchup $matchup,
+        Analysis $analysis,
         array $criteria,
-        Closure $win,
+        ResultInterface $win,
     );
 
     public function isValid(): bool;

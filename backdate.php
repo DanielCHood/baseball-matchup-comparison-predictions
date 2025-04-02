@@ -4,7 +4,7 @@ require_once('vendor/autoload.php');
 
 use DanielCHood\BaseballMatchupComparison\Repository\Event;
 use DanielCHood\BaseballMatchupComparisonPredictions\Container;
-use DanielCHood\BaseballMatchupComparisonPredictions\Prediction\HomeRunStartingPitcher;
+use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
 use DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionFactory;
 use DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionInterface;
 use Kodus\Cache\FileCache;
@@ -12,7 +12,10 @@ use Kodus\Cache\FileCache;
 const CACHE_LAST_DATE_PROCESSED_KEY = 'backdate.last-date-processed';
 const CACHE_BACKDATE_PREDICTION_COLLECTION = 'backdate.prediction-collection';
 
-$container = Container::getInstance();
+$container = Container::getInstance(
+    __DIR__ . '/.env',
+    __DIR__ . '/config'
+);
 
 /** @var Event $repo */
 $repo = $container->get("machup_comparison.event_repository");
@@ -37,9 +40,13 @@ $dateRanges = [
         new DateTime('2024-04-01'),
         new DateTime('2024-09-29'),
     ],
+    2025 => [
+        new DateTime('2025-03-27'),
+        new DateTime('yesterday'),
+    ],
 ];
 
-#unset($dateRanges[2022], $dateRanges[2023]);
+unset($dateRanges[2022], $dateRanges[2023]);
 
 $dates = [];
 foreach ($dateRanges as $dateRange) {
@@ -51,53 +58,64 @@ foreach ($dateRanges as $dateRange) {
 
 $predicters = [
     [
-        'class' => HomeRunStartingPitcher::class,
         'name' => 'underdog;hrScore>0.15;pitchesSeen>400;pitchesThrown>400;velocityScore>2;hrPercentage>1.5;battingAverage>0.2',
         'criteria' => [
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getHomeRunScore() > .15,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getBatterPitchCount() >= 400,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getPitcherPitchCount() > 400,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getHitScore() > 0.0000,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->matchup()->getBatterMoneyline() < 0,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getVelocityScore() > 2,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getBatterHomeRunPercentage() > 1.5,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getBattingAverage() >= 0.2000,
-            function (HomeRunStartingPitcher $predictor) {
+            fn (Analysis $predictor) => $predictor->getHomeRunScore() > .15,
+            fn (Analysis $predictor) => $predictor->getBatterPitchCount() >= 400,
+            fn (Analysis $predictor) => $predictor->getPitcherPitchCount() > 400,
+            fn (Analysis $predictor) => $predictor->getHitScore() > 0.0000,
+            fn (Analysis $predictor) => $predictor->matchup()->getBatterMoneyline() < 0,
+            fn (Analysis $predictor) => $predictor->getVelocityScore() > 2,
+            fn (Analysis $predictor) => $predictor->getBatterHomeRunPercentage() > 1.5,
+            fn (Analysis $predictor) => $predictor->getBattingAverage() >= 0.2000,
+            /**
+            function (Analysis $predictor) {
                 return (
                         floor($predictor->getHitScore()) > 1
                         && round($predictor->getHomeRunScore() * 10) >= floor($predictor->getHitScore())
                     )
                     || floor($predictor->getHitScore()) >= 4;
             },
+            */
         ],
-        'win' => fn (HomeRunStartingPitcher $predictor) => $predictor->matchup()->didHomer(true),
+        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(true),
     ],
     [
-        'class' => HomeRunStartingPitcher::class,
-        'name' => 'favorite;Experimental',
+        'name' => 'favorite;ml>110;pitchesSeen>400;pitchesThrown>400;velocity>0;hrPercentage>1.8;pitcherHrPercentage>1.1;hitScore>0',
         'criteria' => [
-            fn (HomeRunStartingPitcher $predictor) => $predictor->matchup()->getBatterMoneyline() > 110,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getBatterPitchCount() > 400,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getPitcherPitchCount() > 400,
-            fn (HomeRunStartingPitcher $predictor) => abs($predictor->getBattingAverage() - ($predictor->getBattingAverage() * 10)) >= 1.00,
-            //fn (HomeRunStartingPitcher $predictor) => $predictor->getVelocityScore() > 0.000,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getBatterHomeRunPercentage() > 1.800,
-            fn (HomeRunStartingPitcher $predictor) => $predictor->getPitcherHomeRunPercentage() > 1.100,
+            fn (Analysis $predictor) => $predictor->matchup()->getBatterMoneyline() > 110,
+            fn (Analysis $predictor) => $predictor->getBatterPitchCount() > 400,
+            fn (Analysis $predictor) => $predictor->getPitcherPitchCount() > 400,
+            fn (Analysis $predictor) => abs($predictor->getHitScore() - ($predictor->getBattingAverage() * 10)) > 1,
+            fn (Analysis $predictor) => $predictor->getVelocityScore() > 0.000,
+            fn (Analysis $predictor) => $predictor->getBatterHomeRunPercentage() > 1.800,
+            fn (Analysis $predictor) => $predictor->getPitcherHomeRunPercentage() > 1.100,
+            fn (Analysis $predictor) => $predictor->getHitScore() > 0.0000,
         ],
-        'win' => fn (HomeRunStartingPitcher $predictor) => $predictor->matchup()->didHomer(true),
+        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(true),
     ],
 ];
 
-foreach ($predicters as $predicter) {
+$configPredictors = $container->getParameter("predictors");
+foreach ($configPredictors as $predictorDefinition) {
+    /** @var PredictionFactory $predicter */
+    $predicter = $container->get($predictorDefinition);
     $predicters[] = [
-        'class' => HomeRunStartingPitcher::class,
-        'name' => $predicter['name'] . '-AnyPitcher',
-        'criteria' => $predicter['criteria'],
-        'win' => fn(HomeRunStartingPitcher $predictor) => $predictor->matchup()->didHomer(false),
+        'name' => 'config-' . $predicter->name,
+        'criteria' => $predicter->criteria,
+        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(true),
     ];
 }
 
-#$cache->deleteMultiple([CACHE_LAST_DATE_PROCESSED_KEY, CACHE_BACKDATE_PREDICTION_COLLECTION]);
+foreach ($predicters as $predicter) {
+    $predicters[] = [
+        'name' => $predicter['name'] . '-AnyPitcher',
+        'criteria' => $predicter['criteria'],
+        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(false),
+    ];
+}
+
+$cache->deleteMultiple([CACHE_LAST_DATE_PROCESSED_KEY, CACHE_BACKDATE_PREDICTION_COLLECTION]);
 
 $lastOutput = 0;
 
@@ -134,11 +152,8 @@ foreach ($dates as $date) {
         foreach ($matchups as $matchup) {
             foreach ($predicters as $predicter) {
                 /** @var PredictionInterface $predict */
-                $predict = (new PredictionFactory())->build(
-                    $predicter['class'],
-                    $predicter['name'],
-                    $matchup,
-                    $predicter['criteria'],
+                $predict = (new PredictionFactory($predicter['name'], $predicter['criteria'], $predicter['win']))->build(
+                    new Analysis($matchup),
                     $predicter['win'],
                 );
                 if ($predict->isValid()) {

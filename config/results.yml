@@ -1,0 +1,7 @@
+services:
+  predictor_result.home_run_against_starter:
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Result\HomeRun
+    arguments: [true]
+  predictor_result.home_run_against_anyone:
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Result\HomeRun
+    arguments: [false]

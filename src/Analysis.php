@@ -1,56 +1,20 @@
 <?php
 
-namespace DanielCHood\BaseballMatchupComparisonPredictions\Prediction;
+namespace DanielCHood\BaseballMatchupComparisonPredictions;
 
 use Closure;
 use DanielCHood\BaseballMatchupComparison\Matchup;
 use InvalidArgumentException;
+use JsonSerializable;
 
-class HomeRunStartingPitcher implements PredictionInterface {
+class Analysis implements JsonSerializable {
     public function __construct(
-        public readonly string $name,
         protected readonly Matchup $matchup,
-        protected readonly array $criteria,
-        private readonly Closure $win,
     ) {
     }
     
     public function toArray(): array {
-        return [
-            'label' => $this->getLabel(),
-            'home' => $this->matchup->homeTeamId === $this->matchup->getBatterStats()->getTeamId() ? 'true' : 'false',
-            'favorite' => $this->matchup->getBatterMoneyline() > 0 ? 'true' : 'false',
-            'ml' => $this->matchup->getBatterMoneyline(),
-            'hitScore' => $this->getHitScore(),
-            'hrScore' => $this->getHomeRunScore(),
-            'pitcherPitchCount' => $this->getPitcherPitchCount(),
-            'batterPitchCount' => $this->getBatterPitchCount(),
-            'velocity' => $this->getVelocityScore(),
-            'batterHrPercent' => $this->getBatterHomeRunPercentage(),
-            'pitcherHrPercent' => $this->getPitcherHomeRunPercentage(),
-            'battingAverage' => $this->getBattingAverage(),
-            'won' => $this->win(),
-            'pitcher' => $this->matchup->getPitcherStats()->toArray()['athlete'],
-            'batter' => $this->matchup->getBatterStats()->toArray()['athlete'],
-        ];
-    }
-
-    public function isValid(): bool {
-        foreach ($this->criteria as $closure) {
-            if (!$closure($this)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public function getLabel(): string {
-        return $this->name;
-    }
-
-    public function win(): bool {
-        return ($this->win)($this);
+        return json_decode(json_encode($this), true);
     }
 
     public function getHitScore(): float {
@@ -105,7 +69,6 @@ class HomeRunStartingPitcher implements PredictionInterface {
         return $score;
     }
 
-
     public function getVelocityScore(): float {
         $score = 0;
 
@@ -130,6 +93,54 @@ class HomeRunStartingPitcher implements PredictionInterface {
         return $score;
     }
 
+    public function getHomeRunVelocityScore(): float {
+        $score = 0;
+
+        foreach ($this->matchup->getPitcherStats()->getTagged() as $sectionName => $section) {
+            $batterSection = $this->matchup->getBatterStats()->getTagged()[$sectionName] ?? null;
+            // batter hasn't seen a pitch with this tag yet
+            if (!$batterSection) {
+                continue;
+            }
+
+            $velocity = $section['velocity'];
+            $frequency = $section['pitchCount'] / $this->getPitcherPitchCount();
+
+            $batterAverageSeenVelocity = $batterSection['velocityHomeRuns'] ?? 0;
+            if ($batterAverageSeenVelocity === 0) {
+                continue;
+            }
+
+            $score += ($batterAverageSeenVelocity - $velocity) * $frequency;
+        }
+
+        return $score;
+    }
+
+    public function getHitVelocityScore(): float {
+        $score = 0;
+
+        foreach ($this->matchup->getPitcherStats()->getTagged() as $sectionName => $section) {
+            $batterSection = $this->matchup->getBatterStats()->getTagged()[$sectionName] ?? null;
+            // batter hasn't seen a pitch with this tag yet
+            if (!$batterSection) {
+                continue;
+            }
+
+            $velocity = $section['velocity'];
+            $frequency = $section['pitchCount'] / $this->getPitcherPitchCount();
+
+            $batterAverageSeenVelocity = $batterSection['velocityHits'] ?? 0;
+            if ($batterAverageSeenVelocity === 0) {
+                continue;
+            }
+
+            $score += ($batterAverageSeenVelocity - $velocity) * $frequency;
+        }
+
+        return $score;
+    }
+
     public function getBatterPitchCount(): float {
         return array_sum(array_column($this->matchup->getBatterStats()->getTagged(), 'pitchCount'));
     }
@@ -140,5 +151,25 @@ class HomeRunStartingPitcher implements PredictionInterface {
 
     public function matchup(): Matchup {
         return $this->matchup;
+    }
+
+    public function jsonSerialize(): array {
+        return [
+            'home' => $this->matchup->homeTeamId === $this->matchup->getBatterStats()->getTeamId() ? 'true' : 'false',
+            'favorite' => $this->matchup->getBatterMoneyline() > 0 ? 'true' : 'false',
+            'ml' => $this->matchup->getBatterMoneyline(),
+            'hitScore' => $this->getHitScore(),
+            'hrScore' => $this->getHomeRunScore(),
+            'pitcherPitchCount' => $this->getPitcherPitchCount(),
+            'batterPitchCount' => $this->getBatterPitchCount(),
+            'velocity' => $this->getVelocityScore(),
+            'hitVelocity' => $this->getHitVelocityScore(),
+            'homeRunVelocity' => $this->getHomeRunVelocityScore(),
+            'batterHrPercent' => $this->getBatterHomeRunPercentage(),
+            'pitcherHrPercent' => $this->getPitcherHomeRunPercentage(),
+            'battingAverage' => $this->getBattingAverage(),
+            'pitcher' => $this->matchup->getPitcherStats()->toArray()['athlete'],
+            'batter' => $this->matchup->getBatterStats()->toArray()['athlete'],
+        ];
     }
 }

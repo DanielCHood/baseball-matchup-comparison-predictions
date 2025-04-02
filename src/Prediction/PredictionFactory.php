@@ -3,16 +3,21 @@
 namespace DanielCHood\BaseballMatchupComparisonPredictions\Prediction;
 
 use Closure;
-use DanielCHood\BaseballMatchupComparison\Matchup;
+use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
+use DanielCHood\BaseballMatchupComparisonPredictions\Result\ResultInterface;
 
-class PredictionFactory {
+readonly class PredictionFactory {
+    public function __construct(
+        public string $name,
+        public array  $criteria,
+        public ResultInterface $win,
+    ) {
+
+    }
+
     public function build(
-        string $class,
-        string $name,
-        Matchup $matchup,
-        array $criteria,
-        Closure $win,
+        Analysis $analysis,
     ): PredictionInterface {
-        return new $class($name, $matchup, $criteria, $win);
+        return new Prediction($this->name, $analysis, $this->criteria, $this->win);
     }
 }
