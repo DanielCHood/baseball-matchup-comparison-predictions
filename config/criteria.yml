@@ -1,26 +1,42 @@
 services:
   predictor_criteria.minimums.hrScore_over_15:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
-    arguments: ['getHomeRunScore', '0.15']
+    arguments: ['getHomeRunScore', 0.15]
   predictor_criteria.minimums.batterPitchCount_over_400:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
-    arguments: ['getBatterPitchCount', '400']
+    arguments: ['getBatterPitchCount', 400]
   predictor_criteria.minimums.pitcherPitchCount_over_400:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
-    arguments: ['getPitcherPitchCount', '400']
+    arguments: ['getPitcherPitchCount', 400]
   predictor_criteria.minimums.hitScore_over_0:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
-    arguments: ['getHitScore', '0.0000']
+    arguments: ['getHitScore', 0.0000]
+  predictor_criteria.minimums.velocityScore_over_0:
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
+    arguments: ['getVelocityScore', 0]
   predictor_criteria.minimums.velocityScore_over_2:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
-    arguments: ['getVelocityScore', '2']
+    arguments: ['getVelocityScore', 2]
   predictor_criteria.minimums.batterHomeRunPercentage_over_oneFive:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
-    arguments: ['getBatterHomeRunPercentage', '1.500']
+    arguments: ['getBatterHomeRunPercentage', 1.500]
+  predictor_criteria.minimums.batterHomeRunPercentage_over_oneEight:
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
+    arguments: ['getBatterHomeRunPercentage', 1.800]
+  predictor_criteria.minimums.pitcherHomeRunPercentage_over_oneOne:
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
+    arguments: ['getPitcherHomeRunPercentage', 1.100]
   predictor_criteria.minimums.batterBattingAverage_over_2thousand:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
-    arguments: ['getBattingAverage', '.2000']
+    arguments: ['getBattingAverage', .2000]
+  predictor_criteria.minimums.batterMoneyLine_over_110:
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Minimum
+    arguments: ['matchup.getBatterMoneyline', 110]
+
+  predictor_criteria.minimums.hitScoreMinusBattingAverage_over_1:
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\MinimumHitScoreMinusBattingAverage
+    arguments: ['', 1]
 
   predictor_criteria.maximums.batterMoneyLine_under_100:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Criteria\Maximum
-    arguments: ['matchup.getBatterMoneyline', '0']
+    arguments: ['matchup.getBatterMoneyline', 0]

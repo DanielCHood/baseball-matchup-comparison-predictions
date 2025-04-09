@@ -47,7 +47,8 @@ $dateRanges = [
     ],
 ];
 
-unset($dateRanges[2022], $dateRanges[2023], $dateRanges[2024]);
+unset($dateRanges[2025]);
+#unset($dateRanges[2022], $dateRanges[2023], $dateRanges[2025]);
 
 $dates = [];
 foreach ($dateRanges as $dateRange) {
@@ -57,45 +58,7 @@ foreach ($dateRanges as $dateRange) {
     }
 }
 
-$predicters = [
-    [
-        'name' => 'underdog;hrScore>0.15;pitchesSeen>400;pitchesThrown>400;velocityScore>2;hrPercentage>1.5;battingAverage>0.2',
-        'criteria' => [
-            fn (Analysis $predictor) => $predictor->getHomeRunScore() > .15,
-            fn (Analysis $predictor) => $predictor->getBatterPitchCount() >= 400,
-            fn (Analysis $predictor) => $predictor->getPitcherPitchCount() > 400,
-            fn (Analysis $predictor) => $predictor->getHitScore() > 0.0000,
-            fn (Analysis $predictor) => $predictor->matchup()->getBatterMoneyline() < 0,
-            fn (Analysis $predictor) => $predictor->getVelocityScore() > 2,
-            fn (Analysis $predictor) => $predictor->getBatterHomeRunPercentage() > 1.5,
-            fn (Analysis $predictor) => $predictor->getBattingAverage() >= 0.2000,
-            /**
-            function (Analysis $predictor) {
-                return (
-                        floor($predictor->getHitScore()) > 1
-                        && round($predictor->getHomeRunScore() * 10) >= floor($predictor->getHitScore())
-                    )
-                    || floor($predictor->getHitScore()) >= 4;
-            },
-            */
-        ],
-        'win' => new HomeRun(true),
-    ],
-    [
-        'name' => 'favorite;ml>110;pitchesSeen>400;pitchesThrown>400;velocity>0;hrPercentage>1.8;pitcherHrPercentage>1.1;hitScore>0',
-        'criteria' => [
-            fn (Analysis $predictor) => $predictor->matchup()->getBatterMoneyline() > 110,
-            fn (Analysis $predictor) => $predictor->getBatterPitchCount() > 400,
-            fn (Analysis $predictor) => $predictor->getPitcherPitchCount() > 400,
-            fn (Analysis $predictor) => abs($predictor->getHitScore() - ($predictor->getBattingAverage() * 10)) > 1,
-            fn (Analysis $predictor) => $predictor->getVelocityScore() > 0.000,
-            fn (Analysis $predictor) => $predictor->getBatterHomeRunPercentage() > 1.800,
-            fn (Analysis $predictor) => $predictor->getPitcherHomeRunPercentage() > 1.100,
-            fn (Analysis $predictor) => $predictor->getHitScore() > 0.0000,
-        ],
-        'win' => new HomeRun(true),
-    ],
-];
+$predicters = [];
 
 $configPredictors = $container->getParameter("predictors");
 foreach ($configPredictors as $predictorDefinition) {
@@ -116,7 +79,7 @@ foreach ($predicters as $predicter) {
     ];
 }
 
-$cache->deleteMultiple([CACHE_LAST_DATE_PROCESSED_KEY, CACHE_BACKDATE_PREDICTION_COLLECTION]);
+#$cache->deleteMultiple([CACHE_LAST_DATE_PROCESSED_KEY, CACHE_BACKDATE_PREDICTION_COLLECTION]);
 
 $lastOutput = 0;
 

@@ -8,6 +8,7 @@ parameters:
   leetis.api.url: 'https://mlb.leetis.com/batting-data/'
   predictors:
     - '@predictors.one'
+    - '@predictors.two'
 
 services:
   cache:
@@ -50,12 +51,12 @@ services:
     arguments:
       $name: 'favorite;ml>110;pitchesSeen>400;pitchesThrown>400;velocity>0;hrPercentage>1.8;pitcherHrPercentage>1.1;hitScore>0'
       $criteria:
-          - '@predictor_criteria.minimums.hrScore_over_15'
+          - '@predictor_criteria.minimums.batterMoneyLine_over_110'
           - '@predictor_criteria.minimums.batterPitchCount_over_400'
           - '@predictor_criteria.minimums.pitcherPitchCount_over_400'
+          - '@predictor_criteria.minimums.hitScoreMinusBattingAverage_over_1'
+          - '@predictor_criteria.minimums.velocityScore_over_0'
+          - '@predictor_criteria.minimums.batterHomeRunPercentage_over_oneEight'
+          - '@predictor_criteria.minimums.pitcherHomeRunPercentage_over_oneOne'
           - '@predictor_criteria.minimums.hitScore_over_0'
-          - '@predictor_criteria.minimums.velocityScore_over_2'
-          - '@predictor_criteria.minimums.batterHomeRunPercentage_over_oneFive'
-          - '@predictor_criteria.minimums.batterBattingAverage_over_2thousand'
-          - '@predictor_criteria.maximums.batterMoneyLine_under_100'
       $win: '@predictor_result.home_run_against_starter'
