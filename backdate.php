@@ -7,6 +7,7 @@ use DanielCHood\BaseballMatchupComparisonPredictions\Container;
 use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
 use DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionFactory;
 use DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionInterface;
+use DanielCHood\BaseballMatchupComparisonPredictions\Result\HomeRun;
 use Kodus\Cache\FileCache;
 
 const CACHE_LAST_DATE_PROCESSED_KEY = 'backdate.last-date-processed';
@@ -46,7 +47,7 @@ $dateRanges = [
     ],
 ];
 
-unset($dateRanges[2022], $dateRanges[2023]);
+unset($dateRanges[2022], $dateRanges[2023], $dateRanges[2024]);
 
 $dates = [];
 foreach ($dateRanges as $dateRange) {
@@ -78,7 +79,7 @@ $predicters = [
             },
             */
         ],
-        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(true),
+        'win' => new HomeRun(true),
     ],
     [
         'name' => 'favorite;ml>110;pitchesSeen>400;pitchesThrown>400;velocity>0;hrPercentage>1.8;pitcherHrPercentage>1.1;hitScore>0',
@@ -92,7 +93,7 @@ $predicters = [
             fn (Analysis $predictor) => $predictor->getPitcherHomeRunPercentage() > 1.100,
             fn (Analysis $predictor) => $predictor->getHitScore() > 0.0000,
         ],
-        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(true),
+        'win' => new HomeRun(true),
     ],
 ];
 
@@ -103,7 +104,7 @@ foreach ($configPredictors as $predictorDefinition) {
     $predicters[] = [
         'name' => 'config-' . $predicter->name,
         'criteria' => $predicter->criteria,
-        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(true),
+        'win' => $predicter->win,
     ];
 }
 
@@ -111,7 +112,7 @@ foreach ($predicters as $predicter) {
     $predicters[] = [
         'name' => $predicter['name'] . '-AnyPitcher',
         'criteria' => $predicter['criteria'],
-        'win' => fn (Analysis $predictor) => $predictor->matchup()->didHomer(false),
+        'win' => new HomeRun(false),
     ];
 }
 

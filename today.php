@@ -47,14 +47,21 @@ foreach ($eventIds as $eventId) {
 
     /** @var Matchup $matchup */
     foreach ($matchups as $matchup) {
+        $analysis = new Analysis($matchup);
+
         echo " - Considering " . $matchup->getBatterStats()->getName() . " vs " . $matchup->getPitcherStats()->getName() . PHP_EOL;
+        #echo " -- Hit score: " . $analysis->getHitScore() . ", velocity score: " . $analysis->getVelocityScore() . PHP_EOL;
+
         foreach ($predictors as $predictor) {
             $predict = (new PredictionFactory($predictor['name'], $predictor['criteria'], $predictor['win']))->build(
-                new Analysis($matchup),
+                $analysis,
             );
 
             if ($predict->isValid()) {
                 var_dump($predict->toArray());
+            }
+            else {
+                #var_dump($predict->getMismatchedCriteria());
             }
         }
     }

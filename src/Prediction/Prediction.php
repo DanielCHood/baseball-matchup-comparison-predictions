@@ -27,20 +27,26 @@ readonly class Prediction implements PredictionInterface {
     }
 
     public function isValid(): bool {
+        return empty($this->getMismatchedCriteria());
+    }
+
+    public function getMismatchedCriteria(): array {
+        $misses = [];
+
         foreach ($this->criteria as $closure) {
             if ($closure instanceof CriteriaInterface) {
                 if (!$closure->isValid($this->analysis)) {
-                    return false;
+                    $misses[] = get_class($closure) . '::' . $closure->field . "|" . $closure->value;
                 }
             }
             else {
                 if (!$closure($this->analysis)) {
-                    return false;
+                    $misses[] = json_encode($closure);
                 }
             }
         }
 
-        return true;
+        return $misses;
     }
 
     public function getLabel(): string {

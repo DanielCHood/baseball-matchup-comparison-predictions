@@ -36,7 +36,7 @@ class Analysis implements JsonSerializable {
     public function getBatterHomeRunPercentage(): float {
         $tagged = $this->matchup->getBatterStats()->getTagged();
         $homeRunCount = array_sum(array_column($tagged, 'homeRuns'));
-        $pitchCount = array_sum(array_column($tagged, 'pitchCount'));
+        $pitchCount = max(1, array_sum(array_column($tagged, 'pitchCount')));
 
         return $homeRunCount / $pitchCount * 100;
     }
@@ -48,7 +48,7 @@ class Analysis implements JsonSerializable {
     public function getPitcherHomeRunPercentage(): float {
         $tagged = $this->matchup->getPitcherStats()->getTagged();
         $homeRunCount = array_sum(array_column($tagged, 'homeRuns'));
-        $pitchCount = array_sum(array_column($tagged, 'pitchCount'));
+        $pitchCount = max(1, array_sum(array_column($tagged, 'pitchCount')));
 
         return $homeRunCount / $pitchCount * 100;
     }

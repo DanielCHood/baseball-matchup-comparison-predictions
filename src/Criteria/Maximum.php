@@ -6,8 +6,8 @@ use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
 
 class Maximum implements CriteriaInterface {
     public function __construct(
-        private readonly string $field,
-        private readonly mixed $value,
+        public readonly string $field,
+        public readonly mixed $value,
     ) {
 
     }
