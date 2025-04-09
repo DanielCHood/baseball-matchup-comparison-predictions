@@ -3,7 +3,7 @@
 namespace DanielCHood\BaseballMatchupComparisonPredictions\Criteria;
 
 use Closure;
-use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
+use DanielCHood\BaseballMatchupComparisonPredictions\Analyzers\AnalyzerInterface;
 
 interface CriteriaInterface {
     public function __construct(
@@ -11,5 +11,5 @@ interface CriteriaInterface {
         mixed $value,
     );
 
-    public function isValid(Analysis $analysis): bool;
+    public function isValid(AnalyzerInterface $analysis): bool;
 }

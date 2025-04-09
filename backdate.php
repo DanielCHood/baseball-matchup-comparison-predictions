@@ -4,7 +4,6 @@ require_once('vendor/autoload.php');
 
 use DanielCHood\BaseballMatchupComparison\Repository\Event;
 use DanielCHood\BaseballMatchupComparisonPredictions\Container;
-use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
 use DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionFactory;
 use DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionInterface;
 use DanielCHood\BaseballMatchupComparisonPredictions\Result\HomeRun;
@@ -66,6 +65,7 @@ foreach ($configPredictors as $predictorDefinition) {
     $predicter = $container->get($predictorDefinition);
     $predicters[] = [
         'name' => 'config-' . $predicter->name,
+        'analyzer' => $predicter->analyzer,
         'criteria' => $predicter->criteria,
         'win' => $predicter->win,
     ];
@@ -74,12 +74,13 @@ foreach ($configPredictors as $predictorDefinition) {
 foreach ($predicters as $predicter) {
     $predicters[] = [
         'name' => $predicter['name'] . '-AnyPitcher',
+        'analyzer' => $predicter['analyzer'],
         'criteria' => $predicter['criteria'],
         'win' => new HomeRun(false),
     ];
 }
 
-#$cache->deleteMultiple([CACHE_LAST_DATE_PROCESSED_KEY, CACHE_BACKDATE_PREDICTION_COLLECTION]);
+$cache->deleteMultiple([CACHE_LAST_DATE_PROCESSED_KEY, CACHE_BACKDATE_PREDICTION_COLLECTION]);
 
 $lastOutput = 0;
 
@@ -116,9 +117,8 @@ foreach ($dates as $date) {
         foreach ($matchups as $matchup) {
             foreach ($predicters as $predicter) {
                 /** @var PredictionInterface $predict */
-                $predict = (new PredictionFactory($predicter['name'], $predicter['criteria'], $predicter['win']))->build(
-                    new Analysis($matchup),
-                    $predicter['win'],
+                $predict = (new PredictionFactory($predicter['name'], $predicter['analyzer'], $predicter['criteria'], $predicter['win']))->build(
+                    $matchup,
                 );
                 if ($predict->isValid()) {
                     $predictionCollection[] = $predict->toArray();

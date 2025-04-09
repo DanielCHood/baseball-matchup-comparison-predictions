@@ -1,13 +1,11 @@
 <?php
 
-namespace DanielCHood\BaseballMatchupComparisonPredictions;
+namespace DanielCHood\BaseballMatchupComparisonPredictions\Analyzers;
 
-use Closure;
 use DanielCHood\BaseballMatchupComparison\Matchup;
-use InvalidArgumentException;
 use JsonSerializable;
 
-class Analysis implements JsonSerializable {
+class V1 implements AnalyzerInterface {
     public function __construct(
         protected readonly Matchup $matchup,
     ) {

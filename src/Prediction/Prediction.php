@@ -3,14 +3,14 @@
 namespace DanielCHood\BaseballMatchupComparisonPredictions\Prediction;
 
 use Closure;
-use DanielCHood\BaseballMatchupComparisonPredictions\Analysis;
+use DanielCHood\BaseballMatchupComparisonPredictions\Analyzers\AnalyzerInterface;
 use DanielCHood\BaseballMatchupComparisonPredictions\Criteria\CriteriaInterface;
 use DanielCHood\BaseballMatchupComparisonPredictions\Result\ResultInterface;
 
 readonly class Prediction implements PredictionInterface {
     public function __construct(
         public string $name,
-        protected Analysis $analysis,
+        protected AnalyzerInterface $analysis,
         protected array $criteria,
         private ResultInterface $win,
     ) {

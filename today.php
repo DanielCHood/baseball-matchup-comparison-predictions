@@ -28,6 +28,7 @@ foreach ($container->getParameter("predictors") as $predictorDefinition) {
     $predictor = $container->get($predictorDefinition);
     $predictors[] = [
         'name' => $predictor->name,
+        'analyzer' => $predictor->analyzer,
         'criteria' => $predictor->criteria,
         'win' => $predictor->win,
     ];
@@ -47,14 +48,11 @@ foreach ($eventIds as $eventId) {
 
     /** @var Matchup $matchup */
     foreach ($matchups as $matchup) {
-        $analysis = new Analysis($matchup);
-
         echo " - Considering " . $matchup->getBatterStats()->getName() . " vs " . $matchup->getPitcherStats()->getName() . PHP_EOL;
-        #echo " -- Hit score: " . $analysis->getHitScore() . ", velocity score: " . $analysis->getVelocityScore() . PHP_EOL;
 
         foreach ($predictors as $predictor) {
-            $predict = (new PredictionFactory($predictor['name'], $predictor['criteria'], $predictor['win']))->build(
-                $analysis,
+            $predict = (new PredictionFactory($predictor['name'], $predictor['analyzer'], $predictor['criteria'], $predictor['win']))->build(
+                $matchup,
             );
 
             if ($predict->isValid()) {

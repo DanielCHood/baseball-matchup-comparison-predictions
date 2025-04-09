@@ -30,11 +30,18 @@ services:
     class: DanielCHood\BaseballMatchupComparison\Repository\Event
     arguments: ['@machup_comparison.event_data_provider']
 
+  analyzers.v1:
+    public: true
+    class: DanielCHood\BaseballMatchupComparisonPredictions\Analyzers\AnalyzerFactory
+    arguments:
+      $analyzer: DanielCHood\BaseballMatchupComparisonPredictions\Analyzers\V1
+
   predictors.one:
     public: true
     class: DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionFactory
     arguments:
       $name: 'underdog;hrScore>0.15;pitchesSeen>400;pitchesThrown>400;velocityScore>2;hrPercentage>1.5;battingAverage>0.2'
+      $analyzer: '@analyzers.v1'
       $criteria:
         - '@predictor_criteria.minimums.hrScore_over_15'
         - '@predictor_criteria.minimums.batterPitchCount_over_400'
@@ -50,6 +57,7 @@ services:
     class: DanielCHood\BaseballMatchupComparisonPredictions\Prediction\PredictionFactory
     arguments:
       $name: 'favorite;ml>110;pitchesSeen>400;pitchesThrown>400;velocity>0;hrPercentage>1.8;pitcherHrPercentage>1.1;hitScore>0'
+      $analyzer: '@analyzers.v1'
       $criteria:
           - '@predictor_criteria.minimums.batterMoneyLine_over_110'
           - '@predictor_criteria.minimums.batterPitchCount_over_400'
